@@ -15,8 +15,3 @@ def validate_difficulty(difficulty: int, max_difficulty: int) -> None:
     """Validate difficulty level."""
     if difficulty < 1 or difficulty > max_difficulty:
         raise ValueError(f"Difficulty must be between 1 and {max_difficulty}")
-
-def validate_operands_count(num_operands: int) -> None:
-    """Validate number of operands."""
-    if num_operands < 2:
-        raise ValueError("Number of operands must be at least 2")

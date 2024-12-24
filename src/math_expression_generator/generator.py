@@ -5,8 +5,7 @@ from .operators import Operator, OperatorType
 from .utils import (
     generate_number,
     find_divisors,
-    validate_difficulty,
-    validate_operands_count
+    validate_difficulty
 )
 
 class MathExpressionGenerator:
