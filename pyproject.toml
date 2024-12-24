@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "math-expression-generator"
+version = "0.1.0"
+description = "A package for generating random mathematical expressions with customizable difficulty"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+authors = [
+    { name = "Vishwas Zadte", email = "vishwaszadte@gmail.com" },
+]
+keywords = [
+    "math",
+    "python",
+    "expressions",
+    "generator",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+[project.urls]
+Homepage = "https://github.com/vishwaszadte/math-expression-generator"
+Repository = "https://github.com/vishwaszadte/math-expression-generator.git"
+Issues = "https://github.com/vishwaszadte/math-expression-generator/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/math_expression_generator"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
