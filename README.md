@@ -3,7 +3,7 @@ A Python package for generating random mathematical expressions with customizabl
 ## Installation
 
 ```bash
-pip install math-expression-generator
+pip install git+https://github.com/vishwaszadte/math-expression-generator.git
 ```
 
 ## Usage
