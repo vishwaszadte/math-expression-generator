@@ -4,7 +4,7 @@ import random
 
 def generate_number(difficulty: int) -> int:
     """Generate a random number based on difficulty level."""
-    max_value = 10 ** difficulty - 1
+    max_value = 10**difficulty - 1
     min_value = 10 ** (difficulty - 1) if difficulty > 1 else 0
     return random.randint(min_value, max_value)
 

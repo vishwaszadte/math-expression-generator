@@ -1,10 +1,11 @@
 from enum import Enum
-from typing import Callable, List
+from typing import List
 import operator
 
 
 class OperatorType(Enum):
     """Enum of supported operator types."""
+
     ADDITION = "+"
     SUBTRACTION = "-"
     MULTIPLICATION = "*"
@@ -18,7 +19,7 @@ class Operator:
         OperatorType.ADDITION: operator.add,
         OperatorType.SUBTRACTION: operator.sub,
         OperatorType.MULTIPLICATION: operator.mul,
-        OperatorType.DIVISION: operator.truediv
+        OperatorType.DIVISION: operator.truediv,
     }
 
     def __init__(self, operator_type: OperatorType):
@@ -27,7 +28,7 @@ class Operator:
         self.symbol = operator_type.value
 
     @classmethod
-    def get_all_operators(cls) -> List['Operator']:
+    def get_all_operators(cls) -> List["Operator"]:
         """Return list of all available operators."""
         return [cls(op_type) for op_type in OperatorType]
 
