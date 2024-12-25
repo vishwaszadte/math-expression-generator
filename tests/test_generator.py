@@ -1,5 +1,5 @@
 import pytest
-from math_expression_generator import MathExpressionGenerator
+from math_expression_generator import ExpGenerator
 
 
 class TestBase:
@@ -8,7 +8,7 @@ class TestBase:
     @pytest.fixture(autouse=True)
     def setup(self):
         """Setup fixture that runs automatically for all test methods."""
-        self.generator = MathExpressionGenerator()
+        self.generator = ExpGenerator()
 
     def _extract_numbers(self, expression: str) -> list[int]:
         """Helper method to extract numbers from expression."""
@@ -158,7 +158,7 @@ class TestOperandCount(TestBase):
     )
     def test_operand_range_initialization(self, min_ops, max_ops):
         """Test initialization with different operand ranges."""
-        generator = MathExpressionGenerator(min_operands=min_ops, max_operands=max_ops)
+        generator = ExpGenerator(min_operands=min_ops, max_operands=max_ops)
         assert generator.min_operands == min_ops
         assert generator.max_operands == max_ops
 
@@ -183,7 +183,7 @@ class TestOperandCount(TestBase):
 
     def test_custom_range_random_operands(self):
         """Test random operands within custom range."""
-        generator = MathExpressionGenerator(min_operands=3, max_operands=4)
+        generator = ExpGenerator(min_operands=3, max_operands=4)
         for _ in range(20):
             expression, _ = generator.generate_expression()
             operand_count = self._count_operands(expression)
@@ -196,7 +196,7 @@ class TestDecimalResults(TestBase):
     @pytest.fixture
     def decimal_generator(self):
         """Fixture for generator that allows decimal results."""
-        return MathExpressionGenerator(allow_decimal_result=True)
+        return ExpGenerator(allow_decimal_result=True)
 
     def test_division_with_decimals(self, decimal_generator):
         """Test that division can produce decimal results when allowed."""
@@ -220,7 +220,7 @@ class TestDecimalResults(TestBase):
 
     def test_no_decimals_when_disabled(self):
         """Test that decimal results don't occur when not allowed."""
-        decimal_generator = MathExpressionGenerator(allow_decimal_result=False)
+        decimal_generator = ExpGenerator(allow_decimal_result=False)
         for _ in range(20):
             exp, result = decimal_generator.generate_expression()
             print(f" Expression {exp} Result {result}")
@@ -234,7 +234,7 @@ class TestNegativeResults(TestBase):
     @pytest.fixture
     def negative_generator(self):
         """Fixture for generator that allows negative results."""
-        return MathExpressionGenerator(allow_negative_result=True)
+        return ExpGenerator(allow_negative_result=True)
 
     def test_negative_results_when_allowed(self, negative_generator):
         """Test that negative results can occur when allowed."""
@@ -248,14 +248,14 @@ class TestNegativeResults(TestBase):
 
     def test_no_negatives_when_disabled(self):
         """Test that negative results don't occur when not allowed."""
-        generator = MathExpressionGenerator(allow_negative_result=False)
+        generator = ExpGenerator(allow_negative_result=False)
         for _ in range(20):
             _, result = generator.generate_expression()
             assert result >= 0
 
     def test_subtraction_handling_with_negatives_disabled(self):
         """Test that subtraction is properly handled when negatives are disabled."""
-        generator = MathExpressionGenerator(allow_negative_result=False)
+        generator = ExpGenerator(allow_negative_result=False)
         for _ in range(20):
             expression, result = generator.generate_expression()
             # If there's subtraction, verify result is still non-negative
@@ -269,7 +269,7 @@ class TestCombinedFeatures(TestBase):
     @pytest.fixture
     def full_featured_generator(self):
         """Fixture for generator with all features enabled."""
-        return MathExpressionGenerator(
+        return ExpGenerator(
             min_operands=3,
             max_operands=6,
             allow_decimal_result=True,
@@ -313,9 +313,7 @@ class TestEdgeCases(TestBase):
 
     def test_consecutive_divisions(self):
         """Test expressions with consecutive division operations."""
-        generator = MathExpressionGenerator(
-            allow_decimal_result=True, allow_negative_result=True
-        )
+        generator = ExpGenerator(allow_decimal_result=True, allow_negative_result=True)
         expression, result = generator.generate_expression(num_operands=4)
         if expression.count("/") > 1:
             assert isinstance(result, (int, float))
@@ -324,7 +322,7 @@ class TestEdgeCases(TestBase):
 
     def test_max_difficulty_with_features(self):
         """Test maximum difficulty with all features enabled."""
-        generator = MathExpressionGenerator(
+        generator = ExpGenerator(
             max_difficulty=4, allow_decimal_result=True, allow_negative_result=True
         )
         expression, _ = generator.generate_expression(difficulty=4)

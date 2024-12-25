@@ -4,7 +4,7 @@ from .operators import Operator, OperatorType
 from .utils import generate_number, find_divisors, validate_difficulty
 
 
-class MathExpressionGenerator:
+class ExpGenerator:
     def __init__(
         self,
         max_difficulty: int = 4,

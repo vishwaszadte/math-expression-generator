@@ -9,10 +9,10 @@ pip install math-expression-generator
 ## Usage
 
 ```python
-from math_expression_generator import MathExpressionGenerator
+from math_expression_generator import ExpGenerator
 
 # Create generator instance
-generator = MathExpressionGenerator()
+generator = ExpGenerator()
 
 # Generate a single expression
 expression, result = generator.generate_expression(difficulty=1)
