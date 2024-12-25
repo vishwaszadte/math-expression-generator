@@ -1,12 +1,24 @@
 repos:
-- repo: https://github.com/astral-sh/ruff-pre-commit
-  # Ruff version.
-  rev: v0.8.4
-  hooks:
-    # Run the linter.
-    - id: ruff
-      types_or: [ python, pyi ]
-      args: [ --fix ]
-    # Run the formatter.
-    - id: ruff-format
-      types_or: [ python, pyi ]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.8.4
+    hooks:
+      # Run the linter.
+      - id: ruff
+        types_or: [ python, pyi ]
+        args: [ --fix ]
+      # Run the formatter.
+      - id: ruff-format
+        types_or: [ python, pyi ]
+
+  - repo: https://github.com/myint/autoflake
+    rev: v1.5.1
+    hooks:
+      - id: autoflake
+        name: autoflake
+        language: python
+        types: [ python, pyi ]
+        stages: [ pre-commit ]
+        args:
+          - --in-place
+          - --remove-all-unused-imports
