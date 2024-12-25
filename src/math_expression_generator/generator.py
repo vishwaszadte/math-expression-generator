@@ -1,5 +1,4 @@
-# File: src/math_expression_generator/generator.py
-from typing import Union, List, Tuple, Optional
+from typing import List, Tuple, Optional
 import random
 from .operators import Operator, OperatorType
 from .utils import (
@@ -8,104 +7,124 @@ from .utils import (
     validate_difficulty
 )
 
+
 class MathExpressionGenerator:
-    """Generator for random mathematical expressions with customizable difficulty."""
-    
     def __init__(
-        self,
-        max_difficulty: int = 4,
-        min_operands: int = 2,
-        max_operands: int = 5,
-        allow_decimal_result: bool = False,
-        allow_negative_result: bool = False
+            self,
+            max_difficulty: int = 4,
+            min_operands: int = 2,
+            max_operands: int = 5,
+            allow_decimal_result: bool = False,
+            allow_negative_result: bool = False,
+            decimal_places: int = 2  # Add decimal places parameter
     ):
-        """
-        Initialize the generator.
-        
-        Args:
-            max_difficulty: Maximum difficulty level (1-4)
-            min_operands: Minimum number of operands in expression (default: 2)
-            max_operands: Maximum number of operands in expression (default: 5)
-            allow_decimal_result: Whether to allow decimal results (default: False)
-            allow_negative_result: Whether to allow negative results (default: False)
-        """
         self.max_difficulty = max_difficulty
-        self.min_operands = max(2, min_operands)  # Ensure at least 2 operands
+        self.min_operands = max(2, min_operands)
         self.max_operands = max(self.min_operands, max_operands)
         self.allow_decimal_result = allow_decimal_result
         self.allow_negative_result = allow_negative_result
+        self.decimal_places = decimal_places
         self.operators = Operator.get_all_operators()
-    
+
+    def _evaluate_with_precedence(self, numbers: List[int], operators: List[Operator]) -> float:
+        """
+        Evaluate the expression respecting operator precedence (PEMDAS).
+        """
+        # First pass: handle multiplication and division
+        values = numbers.copy()
+        ops = operators.copy()
+        i = 0
+
+        while i < len(ops):
+            if ops[i].type in (OperatorType.MULTIPLICATION, OperatorType.DIVISION):
+                # Apply multiplication or division
+                left = values[i]
+                right = values[i + 1]
+                result = ops[i].func(left, right)
+                # Round intermediate results to prevent floating point errors
+                if isinstance(result, float):
+                    result = round(result, self.decimal_places)
+
+                # Replace the two numbers with their result
+                values[i:i + 2] = [result]
+                # Remove the used operator
+                ops.pop(i)
+            else:
+                i += 1
+
+        # Second pass: handle addition and subtraction
+        result = values[0]
+        for i, op in enumerate(ops):
+            result = op.func(result, values[i + 1])
+            # Round intermediate results
+            if isinstance(result, float):
+                result = round(result, self.decimal_places)
+
+        return result
+
+    def _is_valid_result(self, result: float) -> bool:
+        """
+        Check if a result is valid according to current constraints.
+        """
+        if not self.allow_decimal_result and not float(result).is_integer():
+            return False
+        if not self.allow_negative_result and result < 0:
+            return False
+        return True
+
     def _ensure_valid_division(
-        self,
-        numbers: List[int],
-        operators: List[Operator]
+            self,
+            numbers: List[int],
+            operators: List[Operator]
     ) -> Tuple[List[int], List[Operator]]:
         """Ensure division operations follow constraints."""
-        for i, op in enumerate(operators):
-            if op.type == OperatorType.DIVISION:
-                while numbers[i + 1] == 0 or (
-                    not self.allow_decimal_result and 
-                    numbers[i] % numbers[i + 1] != 0
-                ):
-                    if self.allow_decimal_result:
-                        # If decimals are allowed, just avoid zero division
-                        numbers[i + 1] = generate_number(1)  # Use small numbers for cleaner decimals
-                        if numbers[i + 1] == 0:  # Ensure no zero division
-                            numbers[i + 1] = 1
-                    else:
-                        # Find valid divisors for whole number results
-                        divisors = find_divisors(numbers[i])
-                        if not divisors:
+        for i in range(len(operators)):
+            if operators[i].type == OperatorType.DIVISION:
+                # Handle division by zero
+                if numbers[i + 1] == 0:
+                    numbers[i + 1] = 1
+                    continue
+
+                # Calculate result up to this point with proper precedence
+                temp_numbers = numbers[:i + 2]
+                temp_operators = operators[:i + 1]
+                current_result = self._evaluate_with_precedence(temp_numbers, temp_operators)
+
+                if not self.allow_decimal_result:
+                    attempts = 0
+                    valid_division_found = False
+
+                    while attempts < 10 and not valid_division_found:
+                        if float(current_result).is_integer():
+                            divisors = find_divisors(int(abs(current_result)))
+                            if divisors:
+                                numbers[i + 1] = random.choice(divisors)
+                                valid_division_found = True
+                                break
+
+                        if attempts == 9:
+                            # If we can't find a good divisor, change to multiplication
                             operators[i] = next(
-                                op for op in self.operators 
+                                op for op in self.operators
                                 if op.type == OperatorType.MULTIPLICATION
                             )
-                            break
-                        numbers[i + 1] = random.choice(divisors)
+                        attempts += 1
+                        current_result = self._evaluate_with_precedence(temp_numbers, temp_operators)
+
+            # Validate intermediate result with proper precedence
+            temp_result = self._evaluate_with_precedence(numbers[:i + 2], operators[:i + 1])
+            if not self._is_valid_result(temp_result):
+                raise ValueError("Invalid intermediate result")
+
         return numbers, operators
-    
-    def _ensure_non_negative(
-        self,
-        numbers: List[int],
-        operators: List[Operator]
-    ) -> Tuple[List[int], List[Operator]]:
-        """Ensure the expression result is non-negative if required."""
-        if not self.allow_negative_result:
-            # Calculate the result step by step
-            result = numbers[0]
-            for i, operator in enumerate(operators):
-                next_result = operator.func(result, numbers[i + 1])
-                # If result would be negative, change the operator
-                if next_result < 0:
-                    if operator.type == OperatorType.SUBTRACTION:
-                        # Change subtraction to addition
-                        operators[i] = next(
-                            op for op in self.operators 
-                            if op.type == OperatorType.ADDITION
-                        )
-                    result = operators[i].func(result, numbers[i + 1])
-                else:
-                    result = next_result
-        return numbers, operators
-    
+
     def generate_expression(
-        self,
-        num_operands: Optional[int] = None,
-        difficulty: int = 1
+            self,
+            num_operands: Optional[int] = None,
+            difficulty: int = 1
     ) -> Tuple[str, float]:
-        """
-        Generate a random mathematical expression.
-        
-        Args:
-            num_operands: Number of operands (default: random between min_operands and max_operands)
-            difficulty: Difficulty level (default: 1)
-        
-        Returns:
-            Tuple of (expression string, result)
-        """
         validate_difficulty(difficulty, self.max_difficulty)
-        
+
         if num_operands is None:
             num_operands = random.randint(self.min_operands, self.max_operands)
         else:
@@ -113,45 +132,53 @@ class MathExpressionGenerator:
                 raise ValueError(f"Number of operands must be at least {self.min_operands}")
             if num_operands > self.max_operands:
                 raise ValueError(f"Number of operands cannot exceed {self.max_operands}")
-        
-        numbers = [generate_number(difficulty) for _ in range(num_operands)]
-        operators = [random.choice(self.operators) for _ in range(num_operands - 1)]
-        
-        # Apply constraints
-        numbers, operators = self._ensure_valid_division(numbers, operators)
-        numbers, operators = self._ensure_non_negative(numbers, operators)
-        
-        # Build expression and calculate result
-        expression = str(numbers[0])
-        result = numbers[0]
-        
-        for i, operator in enumerate(operators):
-            expression += f" {operator} {numbers[i + 1]}"
-            result = operator.func(result, numbers[i + 1])
-            
-            # Round decimal results to 2 places for cleaner output
-            if isinstance(result, float) and self.allow_decimal_result:
-                result = round(result, 2)
-        
-        return expression, result
-    
+
+        max_attempts = 100
+        attempt = 0
+
+        while attempt < max_attempts:
+            try:
+                numbers = [generate_number(difficulty) for _ in range(num_operands)]
+                operators = [random.choice(self.operators) for _ in range(num_operands - 1)]
+
+                # Apply constraints
+                numbers, operators = self._ensure_valid_division(numbers, operators)
+
+                # Build expression
+                expression = str(numbers[0])
+                for i, operator in enumerate(operators):
+                    expression += f" {operator} {numbers[i + 1]}"
+
+                # Calculate final result with proper precedence
+                result = self._evaluate_with_precedence(numbers, operators)
+
+                # Validate final result
+                if not self._is_valid_result(result):
+                    raise ValueError("Invalid final result")
+
+                # Round result if it's a decimal
+                if isinstance(result, float):
+                    if self.allow_decimal_result:
+                        result = round(result, self.decimal_places)
+                    elif result.is_integer():
+                        result = int(result)
+                    else:
+                        raise ValueError("Invalid decimal result")
+
+                return expression, result
+
+            except ValueError:
+                attempt += 1
+                continue
+
+        raise ValueError("Could not generate valid expression after maximum attempts")
+
     def generate_expression_set(
-        self,
-        count: int,
-        num_operands: Optional[int] = None,
-        difficulty: int = 1
+            self,
+            count: int,
+            num_operands: Optional[int] = None,
+            difficulty: int = 1
     ) -> List[Tuple[str, float]]:
-        """
-        Generate multiple expressions.
-        
-        Args:
-            count: Number of expressions to generate
-            num_operands: Number of operands per expression
-            difficulty: Difficulty level
-        
-        Returns:
-            List of (expression, result) tuples
-        """
         return [
             self.generate_expression(num_operands, difficulty)
             for _ in range(count)
