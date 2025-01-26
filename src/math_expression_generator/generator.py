@@ -7,7 +7,7 @@ from .utils import generate_number, find_divisors, validate_difficulty
 class ExpGenerator:
     def __init__(
         self,
-        max_difficulty: int = 4,
+        max_difficulty: int = 10,
         min_operands: int = 2,
         max_operands: int = 5,
         allow_decimal_result: bool = False,
@@ -122,7 +122,7 @@ class ExpGenerator:
         return numbers, operators
 
     def generate_expression(
-        self, num_operands: Optional[int] = None, difficulty: int = 1
+        self, num_operands: Optional[int] = None, difficulty: int = 4
     ) -> Tuple[str, float]:
         validate_difficulty(difficulty, self.max_difficulty)
 
@@ -143,7 +143,10 @@ class ExpGenerator:
 
         while attempt < max_attempts:
             try:
-                numbers = [generate_number(difficulty) for _ in range(num_operands)]
+                numbers = [
+                    generate_number(random.randint(1, self.max_difficulty))
+                    for _ in range(num_operands)
+                ]
                 operators = [
                     random.choice(self.operators) for _ in range(num_operands - 1)
                 ]
@@ -181,7 +184,7 @@ class ExpGenerator:
         raise ValueError("Could not generate valid expression after maximum attempts")
 
     def generate_expression_set(
-        self, count: int, num_operands: Optional[int] = None, difficulty: int = 1
+        self, count: int, num_operands: Optional[int] = None, difficulty: int = 4
     ) -> List[Tuple[str, float]]:
         return [
             self.generate_expression(num_operands, difficulty) for _ in range(count)
