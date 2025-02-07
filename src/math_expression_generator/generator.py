@@ -143,10 +143,7 @@ class ExpGenerator:
 
         while attempt < max_attempts:
             try:
-                numbers = [
-                    generate_number(random.randint(1, self.max_difficulty))
-                    for _ in range(num_operands)
-                ]
+                numbers = [generate_number(difficulty) for _ in range(num_operands)]
                 operators = [
                     random.choice(self.operators) for _ in range(num_operands - 1)
                 ]
